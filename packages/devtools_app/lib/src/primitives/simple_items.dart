@@ -40,6 +40,7 @@ class ScreenIds {
   static const network = 'network';
   static const memory = 'memory';
   static const logging = 'logging';
+  static const deeplink = 'deeplink';
 }
 
 const String traceEventsFieldName = 'traceEvents';

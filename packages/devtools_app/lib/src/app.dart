@@ -26,6 +26,7 @@ import 'screens/app_size/app_size_controller.dart';
 import 'screens/app_size/app_size_screen.dart';
 import 'screens/debugger/debugger_controller.dart';
 import 'screens/debugger/debugger_screen.dart';
+import 'screens/deeplink/deeplink_screen.dart';
 import 'screens/inspector/inspector_controller.dart';
 import 'screens/inspector/inspector_screen.dart';
 import 'screens/inspector/inspector_tree_controller.dart';
@@ -604,6 +605,10 @@ List<DevToolsScreen> get defaultScreens {
     DevToolsScreen<AppSizeController>(
       const AppSizeScreen(),
       createController: () => AppSizeController(),
+    ),
+    DevToolsScreen<void>(
+      const DeeplinkScreen(),
+      createController: () {},
     ),
     DevToolsScreen<VMDeveloperToolsController>(
       const VMDeveloperToolsScreen(),
