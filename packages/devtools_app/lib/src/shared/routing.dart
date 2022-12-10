@@ -6,6 +6,7 @@ import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 import '../primitives/auto_dispose.dart';
@@ -128,8 +129,9 @@ class DevToolsRouterDelegate extends RouterDelegate<DevToolsRouteConfiguration>
   final routes = ListQueue<DevToolsRouteConfiguration>();
 
   @override
-  DevToolsRouteConfiguration? get currentConfiguration =>
-      routes.isEmpty ? null : routes.last;
+  DevToolsRouteConfiguration? get currentConfiguration {
+    return routes.isEmpty ? null : routes.last;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -260,26 +262,25 @@ class DevToolsRouterDelegate extends RouterDelegate<DevToolsRouteConfiguration>
       ),
     );
 
-    final path = '/${currentConfig.page}';
-    // Create a new map in case the one we were given was unmodifiable.
-    final params = {...currentConfig.args};
-    params.removeWhere((key, value) => value == null);
-    await SystemNavigator.selectMultiEntryHistory();
-    await SystemNavigator.routeInformationUpdated(
-      location: Uri(
-        path: path,
-        queryParameters: params,
-      ).toString(),
-      state: state,
-      replace: true,
-    );
+    // final path = '/${currentConfig.page}';
+    // // Create a new map in case the one we were given was unmodifiable.
+    // final params = {...currentConfig.args};
+    // params.removeWhere((key, value) => value == null);
+    // await SystemNavigator.selectMultiEntryHistory();
+    // await SystemNavigator.routeInformationUpdated(
+    //   location: Uri(
+    //     path: path,
+    //     queryParameters: params,
+    //   ).toString(),
+    //   state: state,
+    //   replace: true,
+    // );
   }
 
   /// Updates state for the current page.
   ///
   /// Existing state will be preserved unless overwritten by [stateUpdate].
   void updateStateIfNotCurrent(
-    BuildContext context,
     DevToolsNavigationState stateUpdate,
   ) {
     final stateChanged = _changesState(stateUpdate);
@@ -295,9 +296,7 @@ class DevToolsRouterDelegate extends RouterDelegate<DevToolsRouteConfiguration>
         currentConfig.state?.merge(stateUpdate) ?? stateUpdate,
       ),
     );
-    // Add the new state to the browser history.
     print('router navigate');
-    Router.navigate(context, () => null);
     notifyListeners();
   }
 
