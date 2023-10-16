@@ -135,3 +135,9 @@ abstract class DeeplinkApi {
   /// for the app.
   static const deeplinkRootPathPropertyName = 'rootPath';
 }
+
+/// Directory picker APIs.
+abstract class DirectoryPickerApi {
+  /// Launch a directory picker from devtool server
+  static const launchDirectoryPicker = '${apiPrefix}launchDirectoryPicker';
+}

@@ -2,17 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:async';
+
+import 'package:devtools_shared/devtools_deeplink.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../shared/config_specific/server/server.dart' as server;
 import 'deep_links_model.dart';
-import 'fake_data.dart';
 
 class DeepLinksController {
   bool get showSpitScreen => showSpitScreenNotifier.value;
 
   List<LinkData> get getLinkDatasByPath {
     final linkDatasByPath = <String, LinkData>{};
-    for (var linkData in linkDatasNotifier.value) {
+    for (var linkData in linkDatasNotifier.value!) {
       linkDatasByPath[linkData.path] = linkData;
     }
     return linkDatasByPath.values.toList();
@@ -20,14 +23,63 @@ class DeepLinksController {
 
   List<LinkData> get getLinkDatasByDomain {
     final linkDatasByDomain = <String, LinkData>{};
-    for (var linkData in linkDatasNotifier.value) {
+    for (var linkData in linkDatasNotifier.value!) {
       linkDatasByDomain[linkData.domain] = linkData;
     }
     return linkDatasByDomain.values.toList();
   }
 
+  final Map<int, AppLinkSettings> _androidAppLinks = <int, AppLinkSettings>{};
+
+  int get selectedVariantIndex => _selectedVariantIndex;
+  late int _selectedVariantIndex;
+  set selectedVariantIndex(int index) {
+    _selectedVariantIndex = index;
+    linkDatasNotifier.value = null;
+    unawaited(_loadAndroidAppLinks());
+  }
+
+  Future<void> _loadAndroidAppLinks() async {
+    if (!_androidAppLinks.containsKey(_selectedVariantIndex)) {
+      final variant =
+          selectedProject.value!.androidVariants[_selectedVariantIndex];
+      final result = await server.requestAndroidAppLinkSettings(
+        selectedProject.value!.path,
+        buildVariant: variant,
+      );
+      _androidAppLinks[_selectedVariantIndex] = result;
+    }
+    _updateLinks();
+  }
+
+  List<LinkData> get _allLinkDatas {
+    final appLinks = _androidAppLinks[_selectedVariantIndex]?.deeplinks;
+    if (appLinks == null) {
+      return const <LinkData>[];
+    }
+    final domainPathToScheme = <_DomainAndPath, Set<String>>{};
+    for (final appLink in appLinks) {
+      final schemes = domainPathToScheme.putIfAbsent(
+        _DomainAndPath(appLink.host, appLink.path),
+        () => <String>{},
+      );
+      schemes.add(appLink.scheme);
+    }
+    return domainPathToScheme.entries
+        .map(
+          (entry) => LinkData(
+            domain: entry.key.domain,
+            path: entry.key.path,
+            os: [PlatformOS.android],
+            scheme: entry.value.toList(),
+          ),
+        )
+        .toList();
+  }
+
+  final selectedProject = ValueNotifier<FlutterProject?>(null);
   final selectedLink = ValueNotifier<LinkData?>(null);
-  final linkDatasNotifier = ValueNotifier<List<LinkData>>(allLinkDatas);
+  final linkDatasNotifier = ValueNotifier<List<LinkData>?>(null);
   final showSpitScreenNotifier = ValueNotifier<bool>(false);
 
   final _searchContentNotifier = ValueNotifier<String>('');
@@ -35,7 +87,7 @@ class DeepLinksController {
   void _updateLinks() {
     final searchContent = _searchContentNotifier.value;
     final List<LinkData> linkDatas = searchContent.isNotEmpty
-        ? allLinkDatas
+        ? _allLinkDatas
             .where(
               (linkData) => linkData.matchesSearchToken(
                 RegExp(
@@ -45,8 +97,7 @@ class DeepLinksController {
               ),
             )
             .toList()
-        : allLinkDatas;
-
+        : _allLinkDatas;
     linkDatasNotifier.value = linkDatas;
   }
 
@@ -54,4 +105,20 @@ class DeepLinksController {
     _searchContentNotifier.value = content;
     _updateLinks();
   }
+}
+
+class _DomainAndPath {
+  _DomainAndPath(this.domain, this.path);
+  final String domain;
+  final String path;
+
+  @override
+  bool operator ==(Object other) {
+    return other is _DomainAndPath &&
+        other.domain == domain &&
+        other.path == path;
+  }
+
+  @override
+  int get hashCode => Object.hash(domain, path);
 }

@@ -32,6 +32,7 @@ final appSize = ScreenMetaData.appSize.id;
 final vmTools = ScreenMetaData.vmTools.id;
 const console = 'console';
 final simple = ScreenMetaData.simple.id;
+final deeplink = ScreenMetaData.deepLinks.id;
 
 // GA events not associated with a any screen e.g., hotReload, hotRestart, etc
 const devToolsMain = 'main';
@@ -93,6 +94,9 @@ const importFileDiffFirst = 'importFileDiffFirst';
 const importFileDiffSecond = 'importFileDiffSecond';
 const analyzeSingle = 'analyzeSingle';
 const analyzeDiff = 'analyzeDiff';
+
+// Deep Link Tools UX actions:
+const selectProject = 'selectProject';
 
 // VM Tools UX Actions:
 const refreshIsolateStatistics = 'refreshIsolateStatistics';

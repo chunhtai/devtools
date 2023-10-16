@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:devtools_shared/devtools_shared.dart';
 import 'package:devtools_shared/src/deeplink/deeplink_manager.dart';
+import 'package:devtools_shared/src/directory_picker/directory_picker.dart';
 import 'package:devtools_shared/src/extensions/extension_manager.dart';
 import 'package:devtools_shared/src/server/server_api.dart';
 import 'package:shelf/shelf.dart';
@@ -150,6 +151,39 @@ void main() {
     expect(fakeManager.receivedConfiguration, configuration);
     expect(fakeManager.receivedTarget, target);
   });
+
+  test(
+      'handle directory picker api ${DirectoryPickerApi.launchDirectoryPicker}',
+      () async {
+    const expectedPath = '/abc';
+    final request = Request(
+      'get',
+      Uri(
+        scheme: 'https',
+        host: 'localhost',
+        path: DirectoryPickerApi.launchDirectoryPicker,
+      ),
+    );
+    final fakeManager = FakeDirectoryPickerManager();
+    fakeManager.responseForLaunchDirectoryPicker = expectedPath;
+    final response = await ServerApi.handle(
+      request,
+      extensionsManager: ExtensionsManager(buildDir: '/'),
+      deeplinkManager: DeeplinkManager(),
+      directoryPickerManager: fakeManager,
+    );
+    expect(response.statusCode, HttpStatus.ok);
+    expect(await response.readAsString(), expectedPath);
+  });
+}
+
+class FakeDirectoryPickerManager extends DirectoryPickerManager {
+  late String responseForLaunchDirectoryPicker;
+
+  @override
+  Future<String> launchDirectoryPicker() async {
+    return responseForLaunchDirectoryPicker;
+  }
 }
 
 class FakeDeeplinkManager extends DeeplinkManager {

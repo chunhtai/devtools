@@ -116,6 +116,8 @@ Future<UniversalLinkSettings> requestIosUniversalLinkSettings(
 }) async =>
     UniversalLinkSettings.empty;
 
+Future<String?> requestLaunchDirectoryPicker() async => null;
+
 void logWarning() {
   throw Exception(unsupportedMessage);
 }

@@ -12,6 +12,7 @@ import 'package:shelf/shelf.dart' as shelf;
 
 import '../deeplink/deeplink_manager.dart';
 import '../devtools_api.dart';
+import '../directory_picker/directory_picker.dart';
 import '../extensions/extension_enablement.dart';
 import '../extensions/extension_manager.dart';
 import 'file_system.dart';
@@ -35,9 +36,11 @@ class ServerApi {
     shelf.Request request, {
     required ExtensionsManager extensionsManager,
     required DeeplinkManager deeplinkManager,
+    DirectoryPickerManager? directoryPickerManager,
     ServerApi? api,
   }) {
     api ??= ServerApi();
+    directoryPickerManager ??= DirectoryPickerManager();
     final queryParams = request.requestedUri.queryParameters;
     // TODO(kenz): break this switch statement up so that it uses helper methods
     // for each case. Also use [_checkRequiredParameters] and [_encodeResponse]
@@ -253,6 +256,12 @@ class ServerApi {
           deeplinkManager,
         );
 
+      // ----- directory picker api. -----
+      case DirectoryPickerApi.launchDirectoryPicker:
+        return _DirectoryPickerApiHandler.handleLaunchDirectoryPicker(
+          api,
+          directoryPickerManager,
+        );
       default:
         return api.notImplemented();
     }
@@ -492,10 +501,20 @@ abstract class _DeeplinkApiHandler {
   ) {
     final error = result[DeeplinkManager.kErrorField] as String?;
     if (error != null) {
-      api.serverError(error);
+      return api.serverError(error);
     }
     return api.getCompleted(
       result[DeeplinkManager.kOutputJsonField]! as String,
     );
+  }
+}
+
+abstract class _DirectoryPickerApiHandler {
+  static Future<shelf.Response> handleLaunchDirectoryPicker(
+    ServerApi api,
+    DirectoryPickerManager directoryPickerManager,
+  ) async {
+    final result = await directoryPickerManager.launchDirectoryPicker();
+    return api.getCompleted(result);
   }
 }

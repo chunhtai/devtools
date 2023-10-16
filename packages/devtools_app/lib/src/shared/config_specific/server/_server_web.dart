@@ -494,6 +494,21 @@ Future<UniversalLinkSettings> requestIosUniversalLinkSettings(
   return UniversalLinkSettings.empty;
 }
 
+Future<String?> requestLaunchDirectoryPicker() async {
+  if (isDevToolsServerAvailable) {
+    final uri = Uri(
+      path: DirectoryPickerApi.launchDirectoryPicker,
+    );
+    final resp = await request(uri.toString());
+    if (resp?.status == HttpStatus.ok) {
+      return resp!.responseText;
+    } else {
+      logWarning(resp, DirectoryPickerApi.launchDirectoryPicker);
+    }
+  }
+  return null;
+}
+
 void logWarning(HttpRequest? response, String apiType, [String? respText]) {
   _log.warning(
     'HttpRequest $apiType failed status = ${response?.status}'
